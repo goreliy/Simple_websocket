@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test</title>
+    <style>
+        .dataTable {
+            width: 20%;
+            display: inline-block;
+            margin-right: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+        #sliderContainer {
+            margin-top: 20px;
+        }
+    </style>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            var loc = window.location;
+            var wsStart = 'ws://';
+            if (loc.protocol === 'https:') {
+                wsStart = 'wss://';
+            }
+            var wsUrl = wsStart + loc.host + loc.pathname + 'echo';
+            var ws = new WebSocket(wsUrl);
+            var table1 = document.getElementById("dataTable1");
+            var table2 = document.getElementById("dataTable2");
+            var slider = document.getElementById("slider");
+
+            ws.onmessage = function(event) {
+                var data = JSON.parse(event.data);
+                var date = new Date();
+
+                if (data.number1 !== undefined) {
+                    updateTable(table1, data.number1, date);
+                }
+
+                if (data.number2 !== undefined) {
+                    updateTable(table2, data.number2, date);
+                }
+            };
+
+            slider.oninput = function() {
+                var sliderValue = slider.value;
+                ws.send(JSON.stringify({ sliderValue: sliderValue }));
+            };
+
+            function updateTable(table, value, date) {
+                var newRow = table.insertRow(0);
+                var valueCell = newRow.insertCell(0);
+                valueCell.textContent = value;
+                var dateCell = newRow.insertCell(1);
+                dateCell.textContent = date.toLocaleString();
+                while (table.rows.length > 20) {
+                    table.deleteRow(-1);
+                }
+            }
+
+            ws.onclose = function() {
+                // Handle the WebSocket closing if necessary
+            };
+        });
+    </script>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <table class="dataTable" id="dataTable1">
+        <tr>
+            <th>Value from test.txt</th>
+            <th>Timestamp</th>
+        </tr>
+        <!-- Table rows for test.txt will be inserted here -->
+    </table>
+    <table class="dataTable" id="dataTable2">
+        <tr>
+            <th>Value from test1.txt</th>
+            <th>Timestamp</th>
+        </tr>
+        <!-- Table rows for test1.txt will be inserted here -->
+    </table>
+    <div id="sliderContainer">
+        <input type="range" id="slider" min="1" max="1000" value="500">
+    </div>
+</body>
+</html>
